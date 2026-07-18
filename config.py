@@ -18,8 +18,9 @@ PRICES_DIR = DATA_DIR / "prices"          # partitioned by ticker
 FUNDAMENTALS_DIR = DATA_DIR / "fundamentals"
 MACRO_DIR = DATA_DIR / "macro"
 NEWS_DIR = DATA_DIR / "news"
+BENCHMARKS_DIR = DATA_DIR / "benchmarks"  # index prices (S&P 500, TSX) for performance comparison
 
-for d in [PRICES_DIR, FUNDAMENTALS_DIR, MACRO_DIR, NEWS_DIR]:
+for d in [PRICES_DIR, FUNDAMENTALS_DIR, MACRO_DIR, NEWS_DIR, BENCHMARKS_DIR]:
     d.mkdir(parents=True, exist_ok=True)
 
 # --- Ticker universe ---
@@ -43,3 +44,12 @@ FRED_SERIES = {
 
 # --- Historical pull window for initial training set ---
 HISTORY_YEARS = 5
+
+# --- Alpha Vantage free-tier budget (shared by fundamentals + news) ---
+# Fundamentals needs 3 requests/ticker (EARNINGS, INCOME_STATEMENT,
+# BALANCE_SHEET) and news needs 1 request/ticker, so a 15-ticker
+# universe needs 60 requests total -- well over the 25/day free cap.
+# Both collectors accept a shared RequestBudget so a single run of
+# collect_initial.py never exceeds this, and cut-short work resumes
+# automatically on the next run (see collectors/rate_limit.py).
+ALPHA_VANTAGE_DAILY_LIMIT = 25
