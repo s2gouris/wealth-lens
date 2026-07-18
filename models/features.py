@@ -29,7 +29,9 @@ SENTIMENT_COLS = [
     "news_sentiment", "news_volume",
 ]
 
-ALL_FEATURE_COLS = TECHNICAL_COLS + FUNDAMENTAL_COLS + MACRO_COLS + SENTIMENT_COLS
+ENGINEERED_COLS = ["rsi_14", "macd_histogram", "atr_14", "dist_from_52w_high", "roc_63"]
+
+ALL_FEATURE_COLS = TECHNICAL_COLS + FUNDAMENTAL_COLS + MACRO_COLS + SENTIMENT_COLS + ENGINEERED_COLS
 
 HORIZONS = ["1m", "3m", "6m"]
 
@@ -50,3 +52,15 @@ def select_available_features(df: pd.DataFrame, min_coverage: float = 0.5) -> li
         if coverage >= min_coverage:
             available.append(col)
     return available
+
+
+def add_ticker_dummies(df: pd.DataFrame, feature_cols: list[str]) -> tuple:
+    """
+    One-hot encodes ticker as a feature. Without this, the model sees
+    all companies' rows mixed together with no way to learn that, say,
+    NVDA and KO behave differently -- it's forced to treat every row
+    as if it came from a generic, interchangeable stock.
+    """
+    dummies = pd.get_dummies(df["ticker"], prefix="ticker")
+    df_with_dummies = pd.concat([df, dummies], axis=1)
+    return df_with_dummies, feature_cols + list(dummies.columns)

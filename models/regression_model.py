@@ -27,15 +27,19 @@ import xgboost as xgb
 sys.path.append(str(Path(__file__).parent.parent))
 from config import PROCESSED_DIR
 from storage import load_parquet
-from models.features import HORIZONS, select_available_features
+from models.features import HORIZONS, select_available_features, add_ticker_dummies
+from models.engineered_features import add_engineered_features
 
 
-def load_training_data(horizon: str = "1m", min_coverage: float = 0.5):
+def load_training_data(horizon: str = "1m", min_coverage: float = 0.5, use_ticker_dummies: bool = True):
     """
-    Loads training_set.parquet, picks the feature columns that are
-    actually populated (>= min_coverage), and returns (X, y, feature_cols)
-    for the given horizon with incomplete rows dropped. Sorted
-    chronologically -- required for time-series splits downstream.
+    Loads training_set.parquet, adds the 5 engineered technical
+    features (RSI, MACD histogram, ATR, 52-week-high distance,
+    63-day ROC), picks the feature columns that are actually
+    populated (>= min_coverage), optionally one-hot encodes ticker,
+    and returns (X, y, feature_cols) for the given horizon with
+    incomplete rows dropped. Sorted chronologically -- required for
+    time-series splits downstream.
     """
     if horizon not in HORIZONS:
         raise ValueError(f"horizon must be one of {HORIZONS}, got {horizon!r}")
@@ -47,11 +51,15 @@ def load_training_data(horizon: str = "1m", min_coverage: float = 0.5):
             "Run build_features.py first (after collect_initial.py)."
         )
 
+    df = add_engineered_features(df)
     df = df.sort_values("date")
     feature_cols = select_available_features(df, min_coverage=min_coverage)
     target_col = f"forward_return_{horizon}"
 
     df = df.dropna(subset=feature_cols + [target_col])
+    if use_ticker_dummies:
+        df, feature_cols = add_ticker_dummies(df, feature_cols)
+
     return df[feature_cols], df[target_col], feature_cols
 
 

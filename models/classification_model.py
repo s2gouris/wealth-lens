@@ -16,18 +16,28 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.model_selection import TimeSeriesSplit
 from sklearn.metrics import accuracy_score, precision_recall_fscore_support, classification_report
+from sklearn.utils.class_weight import compute_sample_weight
 import xgboost as xgb
 
 sys.path.append(str(Path(__file__).parent.parent))
 from config import PROCESSED_DIR
 from storage import load_parquet
-from models.features import HORIZONS, select_available_features
+from models.features import HORIZONS, select_available_features, add_ticker_dummies
+from models.engineered_features import add_engineered_features
+from models.quantile_labels import add_quantile_labels
 
 
-def load_training_data(horizon: str = "1m", min_coverage: float = 0.5):
+def load_training_data(horizon: str = "1m", min_coverage: float = 0.5,
+                        use_ticker_dummies: bool = True, use_quantile_labels: bool = False):
     """
-    Same as regression_model.load_training_data but for the
-    classification target (label_{horizon}: buy/hold/sell).
+    Same feature pipeline as regression_model.load_training_data
+    (engineered features + coverage-based selection + optional ticker
+    dummies), but for the classification target.
+
+    use_quantile_labels=True switches from the fixed +-5% threshold
+    (label_{horizon}) to tertile cutoffs computed from the observed
+    return distribution (label_{horizon}_quantile) -- see
+    models/quantile_labels.py for why this addresses class imbalance.
     """
     if horizon not in HORIZONS:
         raise ValueError(f"horizon must be one of {HORIZONS}, got {horizon!r}")
@@ -39,15 +49,24 @@ def load_training_data(horizon: str = "1m", min_coverage: float = 0.5):
             "Run build_features.py first (after collect_initial.py)."
         )
 
+    df = add_engineered_features(df)
     df = df.sort_values("date")
-    feature_cols = select_available_features(df, min_coverage=min_coverage)
-    target_col = f"label_{horizon}"
 
+    if use_quantile_labels:
+        df, low_cut, high_cut = add_quantile_labels(df, horizon)
+        target_col = f"label_{horizon}_quantile"
+    else:
+        target_col = f"label_{horizon}"
+
+    feature_cols = select_available_features(df, min_coverage=min_coverage)
     df = df.dropna(subset=feature_cols + [target_col])
+    if use_ticker_dummies:
+        df, feature_cols = add_ticker_dummies(df, feature_cols)
+
     return df[feature_cols], df[target_col].astype(str), feature_cols
 
 
-def train_xgb_classifier(X_train, y_train, params=None):
+def train_xgb_classifier(X_train, y_train, params=None, use_class_weights=True):
     default_params = {
         "n_estimators": 300,
         "max_depth": 4,
@@ -63,8 +82,10 @@ def train_xgb_classifier(X_train, y_train, params=None):
     le = LabelEncoder()
     y_encoded = le.fit_transform(y_train)
 
+    sample_weight = compute_sample_weight("balanced", y_encoded) if use_class_weights else None
+
     model = xgb.XGBClassifier(**default_params)
-    model.fit(X_train, y_encoded)
+    model.fit(X_train, y_encoded, sample_weight=sample_weight)
     return model, le
 
 
