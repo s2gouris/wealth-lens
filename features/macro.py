@@ -28,6 +28,7 @@ def join_macro(prices: pd.DataFrame, macro: pd.DataFrame) -> pd.DataFrame:
     wide = (
         macro.pivot_table(index="date", columns="series", values="value")
         .sort_index()
+        .ffill()
         .reset_index()
     )
 
