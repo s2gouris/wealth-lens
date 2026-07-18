@@ -19,8 +19,9 @@ FUNDAMENTALS_DIR = DATA_DIR / "fundamentals"
 MACRO_DIR = DATA_DIR / "macro"
 NEWS_DIR = DATA_DIR / "news"
 BENCHMARKS_DIR = DATA_DIR / "benchmarks"  # index prices (S&P 500, TSX) for performance comparison
+PROCESSED_DIR = DATA_DIR / "processed"    # feature matrix + labels, ready for model training
 
-for d in [PRICES_DIR, FUNDAMENTALS_DIR, MACRO_DIR, NEWS_DIR, BENCHMARKS_DIR]:
+for d in [PRICES_DIR, FUNDAMENTALS_DIR, MACRO_DIR, NEWS_DIR, BENCHMARKS_DIR, PROCESSED_DIR]:
     d.mkdir(parents=True, exist_ok=True)
 
 # --- Ticker universe ---
