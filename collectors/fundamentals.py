@@ -55,9 +55,19 @@ def fetch_ticker_fundamentals(ticker: str) -> pd.DataFrame:
     Combine EARNINGS (EPS + reported_date), INCOME_STATEMENT (revenue,
     net income), and BALANCE_SHEET (liabilities, equity) into one
     quarterly fundamentals history for `ticker`.
+
+    A short sleep is needed between these 3 calls, not just between
+    tickers -- Alpha Vantage's free tier throttles around 5
+    requests/minute, and firing 3 calls back-to-back for one ticker
+    can trip that even while under the daily cap. A throttled response
+    doesn't raise an HTTP error, it just comes back missing the
+    expected keys, which silently produced "incomplete fundamentals"
+    warnings on every ticker before this fix.
     """
     earnings = _get("EARNINGS", ticker).get("quarterlyEarnings", [])
+    time.sleep(13)
     income = _get("INCOME_STATEMENT", ticker).get("quarterlyReports", [])
+    time.sleep(13)
     balance = _get("BALANCE_SHEET", ticker).get("quarterlyReports", [])
 
     if not earnings or not income or not balance:
