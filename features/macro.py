@@ -18,13 +18,13 @@ import pandas as pd
 
 def join_macro(prices: pd.DataFrame, macro: pd.DataFrame) -> pd.DataFrame:
     prices = prices.sort_values("date").copy()
-    prices["date"] = pd.to_datetime(prices["date"])
-
+    prices["date"] = pd.to_datetime(prices["date"]).astype("datetime64[ns]")
+  
     if macro.empty:
         return prices
 
     macro = macro.copy()
-    macro["date"] = pd.to_datetime(macro["date"])
+    macro["date"] = pd.to_datetime(macro["date"]).astype("datetime64[ns]")    
     wide = (
         macro.pivot_table(index="date", columns="series", values="value")
         .sort_index()
