@@ -1,4 +1,9 @@
--e __pycache__/
+.venv/
+.venv-1/
+__pycache__/
 *.pyc
 .env
-data/*.parquet
+.pytest_cache/
+saved_models/
+*.egg-info/
+.ipynb_checkpoints/
