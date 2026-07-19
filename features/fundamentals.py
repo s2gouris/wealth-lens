@@ -17,7 +17,7 @@ def join_fundamentals(prices: pd.DataFrame, fundamentals: pd.DataFrame) -> pd.Da
     profit_margin, debt_to_equity, revenue_growth_yoy).
     """
     prices = prices.sort_values("date").copy()
-    prices["date"] = pd.to_datetime(prices["date"])
+    prices["date"] = pd.to_datetime(prices["date"]).astype("datetime64[ns]")
 
     if fundamentals.empty:
         for col in ["eps", "revenue", "profit_margin", "debt_to_equity", "revenue_growth_yoy"]:
@@ -26,8 +26,12 @@ def join_fundamentals(prices: pd.DataFrame, fundamentals: pd.DataFrame) -> pd.Da
         return prices
 
     fundamentals = fundamentals.sort_values("reported_date").copy()
-    fundamentals["reported_date"] = pd.to_datetime(fundamentals["reported_date"])
+    fundamentals["reported_date"] = pd.to_datetime(fundamentals["reported_date"]).astype("datetime64[ns]")
 
+    # merge_asof requires exact dtype match on the join keys; pd.to_datetime's
+    # resulting resolution (ms vs us vs ns) varies by pandas/pyarrow version
+    # and OS, so both sides are forced to the same dtype rather than assumed
+    # to already match (see the same fix in macro.py).
     merged = pd.merge_asof(
         prices, fundamentals.drop(columns=["ticker"], errors="ignore"),
         left_on="date", right_on="reported_date",
