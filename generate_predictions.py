@@ -32,6 +32,34 @@ def latest_feature_rows() -> pd.DataFrame:
     return df.groupby("ticker").tail(1).reset_index(drop=True)
 
 
-if __name__ == "__main__":
+def generate_for_horizon(horizon: str) -> pd.DataFrame:
     latest = latest_feature_rows()
-    print(latest[["ticker", "date", "volatility_21d"]].to_string(index=False))
+    tickers = latest["ticker"].tolist()
+    risk = latest["volatility_21d"].tolist()
+
+    # same feature prep as training
+    feature_cols = select_available_features(latest, min_coverage=0.0)
+    X, feature_cols = add_ticker_dummies(latest.copy(), feature_cols)
+    X = X[feature_cols]
+
+    model = load_model(horizon)
+
+    # align columns to exactly what the model was trained on
+    # (fills any missing dummy/feature columns with 0, drops extras)
+    expected = getattr(model, "feature_names_in_", None)
+    if expected is not None:
+        X = X.reindex(columns=list(expected), fill_value=0)
+
+    preds = model.predict(X)
+
+    out = pd.DataFrame({
+        "ticker": tickers,
+        "predicted_return": preds,
+        "predicted_risk": risk,
+    })
+    return out
+
+
+if __name__ == "__main__":
+    result = generate_for_horizon("3m")
+    print(result.sort_values("predicted_return", ascending=False).to_string(index=False))
