@@ -91,7 +91,7 @@ expected_return = (result["allocation_pct"] / 100 * result["predicted_return"]).
 expected_risk = (result["allocation_pct"] / 100 * result["predicted_risk"]).sum()
 
 st.subheader("Risk vs. Return")
-st.caption("Each dot is a stock, sized by its allocation. Up and to the left = higher return for less risk — these get favored.")
+st.caption("Each dot is a stock, sized by its allocation. Up and to the left = higher return for less risk.")
 scatter_data = result.rename(columns={
     "predicted_risk": "Risk",
     "predicted_return": "Expected Return",
