@@ -25,7 +25,8 @@ def allocate(predictions: pd.DataFrame, risk_tolerance: float, diversification_c
     exp_scores = np.exp(df["score"] - df["score"].max())
     df["weight"] = exp_scores / exp_scores.sum()
 
-    horizon_confidence = min(horizon_months / 12.0, 1.0)
+    # scale so even short horizons keep meaningful differentiation between
+    horizon_confidence = min(0.5 + horizon_months / 24.0, 1.0)
     equal_weight = 1.0 / len(df)
     df["weight"] = horizon_confidence * df["weight"] + (1 - horizon_confidence) * equal_weight
 
