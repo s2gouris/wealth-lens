@@ -35,8 +35,9 @@ def latest_feature_rows() -> pd.DataFrame:
 def generate_for_horizon(horizon: str) -> pd.DataFrame:
     latest = latest_feature_rows()
     tickers = latest["ticker"].tolist()
-    risk = latest["volatility_21d"].tolist()
-
+    # annualize daily volatility (~252 trading days) so risk reads in standard terms
+    risk = (latest["volatility_21d"] * (252 ** 0.5)).tolist()
+    
     # same feature prep as training
     feature_cols = select_available_features(latest, min_coverage=0.0)
     X, feature_cols = add_ticker_dummies(latest.copy(), feature_cols)
