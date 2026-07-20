@@ -1,4 +1,4 @@
-# Data Collection Pipeline — Stock Selection IDSS
+# Data Collection Pipeline: Stock Selection IDSS
 
 Collects prices, fundamentals, macro indicators, and news sentiment
 for the ticker universe defined in `config.py`.
