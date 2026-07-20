@@ -23,14 +23,28 @@ def fake_predictions() -> pd.DataFrame:
 
 
 st.title("Wealth Lens: Portfolio Allocation Assistant")
+st.caption(
+    "For a self-directed investor deciding how to allocate across their "
+    "stock watchlist. Adjust the parameters below and watch the recommended "
+    "allocation update live."
+)
 
 col1, col2, col3 = st.columns(3)
 with col1:
-    risk_tolerance = st.slider("Risk tolerance", 0.0, 1.0, 0.5, 0.05)
+    risk_tolerance = st.slider(
+        "Risk tolerance", 0.0, 1.0, 0.5, 0.05,
+        help="0 = very conservative, 1 = very aggressive"
+    )
 with col2:
-    diversification_cap = st.slider("Max allocation per stock (%)", 10, 100, 25, 5) / 100.0
+    diversification_cap = st.slider(
+        "Max allocation per stock (%)", 10, 100, 25, 5,
+        help="No single stock's allocation will exceed this percentage"
+    ) / 100.0
 with col3:
-    horizon_months = st.select_slider("Investment horizon (months)", [1, 3, 6, 12], value=3)
+    horizon_months = st.select_slider(
+        "Investment horizon (months)", [1, 3, 6, 12], value=3,
+        help="Shorter horizons pull the allocation closer to equal-weight"
+    )
 
 predictions = fake_predictions()
 result = allocate(predictions, risk_tolerance, diversification_cap, horizon_months)
