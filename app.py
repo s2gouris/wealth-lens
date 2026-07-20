@@ -51,7 +51,7 @@ with col1:
     )
 with col2:
     diversification_cap = st.slider(
-        "Max allocation per stock (%)", 10, 100, 25, 5,
+        "Max allocation per stock (%)", 5, 20, 12, 1,
         help="No single stock's allocation will exceed this percentage"
     ) / 100.0
 with col3:
@@ -68,7 +68,12 @@ left, right = st.columns([2, 1])
 with left:
     st.subheader("Recommended Allocation")
     sorted_result = result.sort_values("allocation_pct", ascending=False)
-    st.bar_chart(sorted_result.set_index("ticker")["allocation_pct"], color="#74b89e")
+    st.bar_chart(
+    sorted_result.set_index("ticker")["allocation_pct"],
+    color="#2A7F7E",
+    x_label="Stock",
+    y_label="Allocation (%)",
+)
 
 with right:
     st.subheader("Details")
