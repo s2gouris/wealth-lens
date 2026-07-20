@@ -54,7 +54,7 @@ left, right = st.columns([2, 1])
 with left:
     st.subheader("Recommended Allocation")
     sorted_result = result.sort_values("allocation_pct", ascending=False)
-    st.bar_chart(sorted_result.set_index("ticker")["allocation_pct"])
+    st.bar_chart(sorted_result.set_index("ticker")["allocation_pct"], color="#1A2540")
 
 with right:
     st.subheader("Details")
