@@ -57,9 +57,13 @@ def generate_for_horizon(horizon: str) -> pd.DataFrame:
         "predicted_return": preds,
         "predicted_risk": risk,
     })
+    path = PROCESSED_DIR / f"final_predictions_{horizon}.parquet"
+    out.to_parquet(path, index=False)
+    print(f"[{horizon}] wrote {len(out)} rows to {path}")
     return out
 
 
 if __name__ == "__main__":
-    result = generate_for_horizon("3m")
-    print(result.sort_values("predicted_return", ascending=False).to_string(index=False))
+    for horizon in HORIZONS:
+        result = generate_for_horizon(horizon)
+        print(result.sort_values("predicted_return", ascending=False).to_string(index=False))
