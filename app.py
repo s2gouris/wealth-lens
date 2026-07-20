@@ -83,6 +83,41 @@ with right:
 expected_return = (result["allocation_pct"] / 100 * result["predicted_return"]).sum()
 expected_risk = (result["allocation_pct"] / 100 * result["predicted_risk"]).sum()
 
+st.subheader("Risk vs. Return")
+st.caption("Each dot is a stock, sized by its allocation. Up and to the left = higher return for less risk — these get favored.")
+scatter_data = result.rename(columns={
+    "predicted_risk": "Risk",
+    "predicted_return": "Expected Return",
+})
+st.scatter_chart(
+    scatter_data,
+    x="Risk",
+    y="Expected Return",
+    color="#2A7F7E",
+    size="allocation_pct",
+)
+
+top_holdings = result.nlargest(3, "allocation_pct")["ticker"].tolist()
+if risk_tolerance < 0.34:
+    explanation = (
+        f"At your current (conservative) risk tolerance, the portfolio favors "
+        f"low-volatility stocks like {', '.join(top_holdings)}. "
+        f"Increase risk tolerance to shift weight toward higher-return, higher-risk names."
+    )
+elif risk_tolerance < 0.67:
+    explanation = (
+        f"At your current (balanced) risk tolerance, the portfolio spreads weight "
+        f"across {', '.join(top_holdings)} and similar names, trading off return against risk. "
+        f"Move the slider either way to tilt more conservative or aggressive."
+    )
+else:
+    explanation = (
+        f"At your current (aggressive) risk tolerance, the portfolio tilts toward "
+        f"higher-return names like {', '.join(top_holdings)}, accepting more volatility. "
+        f"Lower risk tolerance to favor steadier stocks."
+    )
+st.caption(explanation)
+
 st.subheader("Portfolio Summary")
 m1, m2, m3 = st.columns(3)
 m1.metric("Expected return", f"{expected_return*100:.1f}%")
