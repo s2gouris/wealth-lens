@@ -191,7 +191,7 @@ st.markdown(
     """
     <div class="wl-hero">
       <h1>Wealth Lens</h1>
-      <p>An intelligent decision-support system for the self-directed investor — from per-stock
+      <p>An intelligent decision-support system for the self-directed investor, from per-stock
       Buy / Hold / Sell signals through to a personalized, risk-aware portfolio allocation.</p>
     </div>
     """,
@@ -201,7 +201,7 @@ st.markdown(
 # ------------------------------------------------------------------ 1. Market signals
 st.markdown('<div class="wl-section">1 · Market Signals</div>', unsafe_allow_html=True)
 st.markdown(
-    f'<div class="wl-sub">What the buy/hold/sell classifier sees across your {len(result)}-stock '
+    f'<div class="wl-sub">The buy/hold/sell classifier across your {len(result)}-stock '
     f'watchlist over a {horizon_months}-month horizon.</div>',
     unsafe_allow_html=True,
 )
@@ -249,7 +249,7 @@ st.dataframe(
 
 # ------------------------------------------------------------------ 2. Focus on a stock
 st.markdown('<div class="wl-section">2 · Focus on a Stock</div>', unsafe_allow_html=True)
-st.markdown('<div class="wl-sub">Drill into any name to see the full recommendation and why.</div>',
+st.markdown('<div class="wl-sub">Click on any stock from the drop-down below to see the full recommendation and why.</div>',
             unsafe_allow_html=True)
 
 focus = st.selectbox(
@@ -295,8 +295,7 @@ with c_right:
 # ------------------------------------------------------------------ 3. Allocation
 st.markdown('<div class="wl-section">3 · Recommended Allocation</div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="wl-sub">Position sizes from the optimizer — colored by signal, so you can see the '
-    'conviction behind each weight. Adjust your profile in the sidebar and watch it update.</div>',
+    '<div class="wl-sub">Adjust your profile in the sidebar and watch it update.</div>',
     unsafe_allow_html=True,
 )
 alloc_view = result[result["allocation_pct"] >= 0.01].sort_values("allocation_pct", ascending=False)
@@ -343,8 +342,7 @@ st.plotly_chart(style_fig(fig_sc, height=440), use_container_width=True)
 # ------------------------------------------------------------------ 5. Portfolio summary
 st.markdown('<div class="wl-section">5 · Portfolio Summary</div>', unsafe_allow_html=True)
 st.markdown(
-    '<div class="wl-sub">The bottom line for the portfolio your current profile produces — '
-    'every figure recomputes as you move the sliders.</div>',
+    '<div class="wl-sub">Based on your portfolio below is your performance overview.</div>',
     unsafe_allow_html=True,
 )
 m1, m2, m3, m4 = st.columns(4)
@@ -370,7 +368,7 @@ m4.metric(
 profile = "conservative" if risk_tolerance < 0.34 else "aggressive" if risk_tolerance > 0.67 else "balanced"
 top_holdings = result.nlargest(3, "allocation_pct")["ticker"].tolist()
 st.markdown(
-    f'<div class="wl-note">Bottom line — at your <b>{profile}</b> profile over <b>{horizon_months} months</b>, '
+    f'<div class="wl-note">At your <b>{profile}</b> profile over <b>{horizon_months} months</b>, '
     f'Wealth Lens concentrates into <b>{active_positions}</b> of {len(result)} names, led by '
     f'<b>{", ".join(top_holdings)}</b>. The classifier currently sees <b>{n_buy} Buy</b>, '
     f'<b>{n_hold} Hold</b>, and <b>{n_sell} Sell</b> signals, and the resulting book targets a '
@@ -379,7 +377,4 @@ st.markdown(
     f'return added over equal-weighting).</div>',
     unsafe_allow_html=True,
 )
-st.caption(
-    "Wealth Lens · MSCI 436 IDSS Project — educational decision support, not investment advice. "
-    "Model metrics are cross-validated; see evaluate_all.py."
-)
+
