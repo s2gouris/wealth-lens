@@ -51,7 +51,7 @@ with col1:
     )
 with col2:
     diversification_cap = st.slider(
-        "Max allocation per stock (%)", 5, 20, 12, 1,
+        "Max allocation per stock (%)", 5, 15, 8, 1,
         help="No single stock's allocation will exceed this percentage"
     ) / 100.0
 with col3:
