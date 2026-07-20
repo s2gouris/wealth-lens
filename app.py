@@ -8,7 +8,16 @@ import streamlit as st
 from optimizer import allocate
 
 st.set_page_config(page_title="Wealth Lens", layout="wide")
-
+st.markdown(
+    """
+    <style>
+    [data-testid="stDecoration"] {
+        display: none;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
 
 def fake_predictions() -> pd.DataFrame:
     """Placeholder until real model predictions are wired in."""
@@ -54,7 +63,7 @@ left, right = st.columns([2, 1])
 with left:
     st.subheader("Recommended Allocation")
     sorted_result = result.sort_values("allocation_pct", ascending=False)
-    st.bar_chart(sorted_result.set_index("ticker")["allocation_pct"], color="#1A2540")
+    st.bar_chart(sorted_result.set_index("ticker")["allocation_pct"], color="#74b89e")
 
 with right:
     st.subheader("Details")
