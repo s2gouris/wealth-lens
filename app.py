@@ -4,6 +4,8 @@ Run with: streamlit run app.py
 """
 import pandas as pd
 import streamlit as st
+import plotly.express as px
+
 
 from optimizer import allocate
 
@@ -89,13 +91,17 @@ scatter_data = result.rename(columns={
     "predicted_risk": "Risk",
     "predicted_return": "Expected Return",
 })
-st.scatter_chart(
+fig = px.scatter(
     scatter_data,
     x="Risk",
     y="Expected Return",
-    color="#2A7F7E",
     size="allocation_pct",
+    text="ticker",
+    hover_name="ticker",
 )
+fig.update_traces(textposition="top center", marker_color="#2A7F7E")
+fig.update_layout(plot_bgcolor="#FAF7F2", paper_bgcolor="#FAF7F2")
+st.plotly_chart(fig, use_container_width=True)
 
 top_holdings = result.nlargest(3, "allocation_pct")["ticker"].tolist()
 if risk_tolerance < 0.34:
