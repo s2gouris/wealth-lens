@@ -19,16 +19,19 @@ st.markdown(
     unsafe_allow_html=True,
 )
 
-def fake_predictions() -> pd.DataFrame:
-    """Placeholder until real model predictions are wired in."""
-    return pd.DataFrame({
-        "ticker": ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "JPM", "XOM", "JNJ",
-                   "PG", "KO", "TSLA", "META", "DIS", "WMT", "V"],
-        "predicted_return": [0.08, 0.07, 0.06, 0.09, 0.15, 0.05, 0.04, 0.03,
-                              0.03, 0.02, 0.20, 0.10, 0.02, 0.03, 0.06],
-        "predicted_risk": [0.15, 0.14, 0.16, 0.20, 0.35, 0.12, 0.18, 0.08,
-                            0.07, 0.06, 0.45, 0.28, 0.10, 0.05, 0.13],
-    })
+def load_real_predictions(horizon_months: int) -> pd.DataFrame:
+    """Loads model predictions for the chosen horizon."""
+    horizon_map = {1: "1m", 3: "3m", 6: "6m", 12: "6m"}  # 12mo slider uses the 6m model
+    path = f"data/processed/final_predictions_{horizon_map[horizon_months]}.parquet"
+    try:
+        return pd.read_parquet(path)
+    except FileNotFoundError:
+        st.error(
+            f"Predictions file not found: {path}. "
+            "Run the pipeline first: collect_initial.py → build_features.py → "
+            "evaluate_all.py → generate_predictions.py"
+        )
+        st.stop()
 
 
 st.title("Wealth Lens: Portfolio Allocation Assistant")
@@ -55,7 +58,7 @@ with col3:
         help="Shorter horizons pull the allocation closer to equal-weight"
     )
 
-predictions = fake_predictions()
+predictions = load_real_predictions(horizon_months)
 result = allocate(predictions, risk_tolerance, diversification_cap, horizon_months)
 
 left, right = st.columns([2, 1])
