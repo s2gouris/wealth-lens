@@ -35,5 +35,28 @@ with col3:
 predictions = fake_predictions()
 result = allocate(predictions, risk_tolerance, diversification_cap, horizon_months)
 
-st.subheader("Recommended Allocation")
-st.bar_chart(result.set_index("ticker")["allocation_pct"])
+left, right = st.columns([2, 1])
+
+with left:
+    st.subheader("Recommended Allocation")
+    st.bar_chart(result.set_index("ticker")["allocation_pct"])
+
+with right:
+    st.subheader("Details")
+    st.dataframe(
+        result.rename(columns={
+            "predicted_return": "Pred. Return",
+            "predicted_risk": "Pred. Risk",
+            "allocation_pct": "Allocation %",
+        }),
+        hide_index=True,
+        use_container_width=True,
+    )
+
+expected_return = (result["allocation_pct"] / 100 * result["predicted_return"]).sum()
+expected_risk = (result["allocation_pct"] / 100 * result["predicted_risk"]).sum()
+
+m1, m2, m3 = st.columns(3)
+m1.metric("Expected return", f"{expected_return*100:.1f}%")
+m2.metric("Portfolio risk", "Low" if expected_risk < 0.15 else "Medium" if expected_risk < 0.25 else "High")
+m3.metric("Holdings", len(result))
