@@ -46,6 +46,14 @@ Parquet was chosen over CSV because it's columnar (fast to load only
 the columns you need for feature engineering) and compressed (years
 of daily data across many tickers stays small).
 
+## Running the app
+```
+streamlit run app.py
+```
+This opens an interactive dashboard where users adjust risk tolerance,
+diversification limits, and investment horizon via sliders, and see
+the recommended portfolio allocation update live.
+
 ## Known constraints (see worksheet Data Collection section)
 
 - **Alpha Vantage free tier**: 25 requests/day, ~5/min. Fundamentals
