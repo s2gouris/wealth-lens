@@ -3,9 +3,10 @@ Collects news sentiment via Alpha Vantage's NEWS_SENTIMENT endpoint.
 This returns a pre-computed sentiment score per article (no need to
 build your own NLP sentiment model), tagged to the relevant tickers.
 
-Shares the same rate limit constraint as fundamentals.py — batch
-these calls together against your 25/day budget, or space fundamentals
-and news collection across different days.
+Shares the same Alpha Vantage rate limit as fundamentals.py. When both
+run in the same collect_initial.py invocation, pass the same
+RequestBudget instance to both so they split one day's quota instead
+of each independently exceeding it.
 """
 import requests
 import pandas as pd
@@ -17,6 +18,7 @@ from datetime import date
 sys.path.append(str(Path(__file__).parent.parent))
 from config import ALPHA_VANTAGE_API_KEY, NEWS_DIR
 from storage import save_parquet
+from collectors.rate_limit import RequestBudget
 
 BASE_URL = "https://www.alphavantage.co/query"
 
@@ -56,15 +58,26 @@ def fetch_news_sentiment(ticker: str) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def collect_news(tickers: list[str], sleep_seconds: float = 15.0):
-    for ticker in tickers:
+def collect_news(tickers: list[str], sleep_seconds: float = 15.0,
+                  request_budget: RequestBudget | None = None):
+    collected = 0
+    for i, ticker in enumerate(tickers):
+        if request_budget is not None and not request_budget.has(1):
+            left = tickers[i:]
+            print(f"  [BUDGET] stopping news early — {len(left)} ticker(s) remain: "
+                  f"{', '.join(left)}. Re-run tomorrow to continue.")
+            break
+
         print(f"Fetching news sentiment for {ticker}...")
         df = fetch_news_sentiment(ticker)
+        if request_budget is not None:
+            request_budget.spend(1)
         if not df.empty:
             path = NEWS_DIR / f"{ticker}_news.parquet"
             save_parquet(df, path, dedupe_on=["ticker", "title", "published_at"])
+            collected += 1
         time.sleep(sleep_seconds)
-    print("Done.")
+    print(f"Done. {collected}/{len(tickers)} tickers collected this run.")
 
 
 if __name__ == "__main__":

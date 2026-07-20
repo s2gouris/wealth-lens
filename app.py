@@ -1,0 +1,39 @@
+"""
+Wealth Lens -- interactive portfolio allocation app.
+Run with: streamlit run app.py
+"""
+import pandas as pd
+import streamlit as st
+
+from optimizer import allocate
+
+st.set_page_config(page_title="Wealth Lens", layout="wide")
+
+
+def fake_predictions() -> pd.DataFrame:
+    """Placeholder until real model predictions are wired in."""
+    return pd.DataFrame({
+        "ticker": ["AAPL", "MSFT", "GOOGL", "AMZN", "NVDA", "JPM", "XOM", "JNJ",
+                   "PG", "KO", "TSLA", "META", "DIS", "WMT", "V"],
+        "predicted_return": [0.08, 0.07, 0.06, 0.09, 0.15, 0.05, 0.04, 0.03,
+                              0.03, 0.02, 0.20, 0.10, 0.02, 0.03, 0.06],
+        "predicted_risk": [0.15, 0.14, 0.16, 0.20, 0.35, 0.12, 0.18, 0.08,
+                            0.07, 0.06, 0.45, 0.28, 0.10, 0.05, 0.13],
+    })
+
+
+st.title("Wealth Lens: Portfolio Allocation Assistant")
+
+col1, col2, col3 = st.columns(3)
+with col1:
+    risk_tolerance = st.slider("Risk tolerance", 0.0, 1.0, 0.5, 0.05)
+with col2:
+    diversification_cap = st.slider("Max allocation per stock (%)", 10, 100, 25, 5) / 100.0
+with col3:
+    horizon_months = st.select_slider("Investment horizon (months)", [1, 3, 6, 12], value=3)
+
+predictions = fake_predictions()
+result = allocate(predictions, risk_tolerance, diversification_cap, horizon_months)
+
+st.subheader("Recommended Allocation")
+st.bar_chart(result.set_index("ticker")["allocation_pct"])

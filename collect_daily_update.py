@@ -20,9 +20,11 @@ To schedule this automatically:
     on repo commits rewards.
 """
 from datetime import date
-from config import STARTER_UNIVERSE
+from config import STARTER_UNIVERSE, ALPHA_VANTAGE_DAILY_LIMIT
 from collectors.prices import collect_prices
+from collectors.benchmarks import collect_benchmarks
 from collectors.news import collect_news
+from collectors.rate_limit import RequestBudget
 
 if __name__ == "__main__":
     print(f"=== Daily update: {date.today().isoformat()} ===")
@@ -30,8 +32,14 @@ if __name__ == "__main__":
     print("Updating prices (daily)...")
     collect_prices(STARTER_UNIVERSE, initial=False)
 
+    print("Updating benchmark indices (daily)...")
+    collect_benchmarks(initial=False)
+
     print("Updating news sentiment (daily)...")
-    collect_news(STARTER_UNIVERSE)
+    # This script doesn't touch fundamentals, so news gets the full
+    # daily Alpha Vantage budget here (unlike collect_initial.py, where
+    # they share one budget) -- 25 requests covers all 15 starter tickers.
+    collect_news(STARTER_UNIVERSE, request_budget=RequestBudget(ALPHA_VANTAGE_DAILY_LIMIT))
 
     print("Note: fundamentals and macro run on separate, less frequent")
     print("schedules — see collectors/fundamentals.py and collectors/macro.py")
