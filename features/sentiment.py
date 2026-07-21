@@ -11,7 +11,7 @@ import pandas as pd
 
 def join_sentiment(prices: pd.DataFrame, news: pd.DataFrame, window_days: int = 7) -> pd.DataFrame:
     prices = prices.sort_values("date").copy()
-    prices["date"] = pd.to_datetime(prices["date"])
+    prices["date"] = pd.to_datetime(prices["date"]).astype("datetime64[ns]")
 
     if news.empty:
         prices["news_sentiment"] = pd.NA
@@ -39,6 +39,9 @@ def join_sentiment(prices: pd.DataFrame, news: pd.DataFrame, window_days: int = 
     rolled = daily.rolling(f"{window_days}D").sum().reset_index()
     rolled["news_sentiment"] = rolled["weighted_sum"] / rolled["weight_sum"].replace(0, pd.NA)
     rolled["news_volume"] = rolled["article_count"]
+    # Same merge_asof dtype requirement as fundamentals.py/macro.py --
+    # date_range's output resolution isn't guaranteed to match prices["date"].
+    rolled["date"] = rolled["date"].astype("datetime64[ns]")
 
     return pd.merge_asof(
         prices, rolled[["date", "news_sentiment", "news_volume"]],
