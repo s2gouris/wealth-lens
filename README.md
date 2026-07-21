@@ -1,6 +1,6 @@
 # Wealth Lens: Stock Selection & Portfolio Allocation IDSS
 
-An interactive decision support system that helps self-directed investors decide how to allocate their portfolio, based on predicted returns, risk, and a Buy/Hold/Sell signal per stock — personalized to their risk tolerance, diversification limits, and investment horizon.
+An interactive decision support system that helps self-directed investors decide how to allocate their portfolio, based on predicted returns, risk, and a Buy/Hold/Sell signal per stock, personalized to their risk tolerance, diversification limits, and investment horizon.
 
 Collects prices, fundamentals, macro indicators, and news sentiment for the ticker universe defined in `config.py`, trains prediction models on that data, and serves recommendations through an interactive Streamlit app.
 
@@ -19,9 +19,9 @@ Collects prices, fundamentals, macro indicators, and news sentiment for the tick
    ```
    cp .env.example .env
    ```
-   Add `.env` to `.gitignore` before committing — never push API keys to GitHub.
+   Add `.env` to `.gitignore` before committing. Never push API keys to GitHub.
 
-## Usage — full pipeline, in order
+## Usage, full pipeline, in order
 
 **1. Collect raw data** (run once to build your training set):
 ```
@@ -38,7 +38,7 @@ python collect_daily_update.py
 python build_features.py
 ```
 
-**4. Train the models** (return regressor + Buy/Hold/Sell classifier, per horizon):
+**4. Train the models** (return regressor plus Buy/Hold/Sell classifier, per horizon):
 ```
 python evaluate_all.py
 ```
@@ -52,7 +52,7 @@ python generate_predictions.py
 ```
 streamlit run app.py
 ```
-This opens an interactive dashboard where users adjust risk tolerance, diversification cap, and investment horizon via sliders, and see the recommended allocation — along with per-stock Buy/Hold/Sell signals, a risk-vs-return view, and a portfolio summary — update live.
+This opens an interactive dashboard where users adjust risk tolerance, diversification cap, and investment horizon via sliders, and see the recommended allocation, along with per-stock Buy/Hold/Sell signals, a risk-vs-return view, and a portfolio summary, update live.
 
 ## Data layout
 
@@ -62,8 +62,8 @@ data/
   fundamentals/       dated snapshots (point-in-time, not overwritten)
   macro/              shared macro series, joined by date
   news/               one Parquet file per ticker, sentiment-scored articles
-  processed/          engineered feature table + final predictions
-saved_models/          trained regressor + classifier, one set per horizon
+  processed/          engineered feature table plus final predictions
+saved_models/          trained regressor and classifier, one set per horizon
 ```
 
 Parquet was chosen over CSV because it's columnar (fast to load only the columns you need for feature engineering) and compressed (years of daily data across many tickers stays small).
@@ -71,17 +71,17 @@ Parquet was chosen over CSV because it's columnar (fast to load only the columns
 ## Model architecture
 
 Two models feed the portfolio optimizer:
-- **Regressor** (XGBoost) — predicts expected forward return per stock, trained separately per horizon (1m/3m/6m)
-- **Classifier** (XGBoost) — predicts Buy/Hold/Sell action per stock, reported alongside the allocation as a secondary signal
+- **Regressor** (XGBoost): predicts expected forward return per stock, trained separately per horizon (1m/3m/6m)
+- **Classifier** (XGBoost): predicts Buy/Hold/Sell action per stock, reported alongside the allocation as a secondary signal
 
 Risk is computed directly from price history (annualized trailing 21-day volatility) rather than a separately trained model.
 
 ## Known constraints (see worksheet Data Collection section)
 
-- **Alpha Vantage free tier**: 25 requests/day, ~5/min. Fundamentals need 3 requests/ticker and news needs 1/ticker, so a full 15-ticker collection needs ~60 requests total — well over the daily cap. A single run of `collect_initial.py` will collect what the budget allows and stop; re-running on subsequent days resumes automatically and skips already-collected tickers.
+- **Alpha Vantage free tier**: 25 requests/day, ~5/min. Fundamentals need 3 requests/ticker and news needs 1/ticker, so a full 15-ticker collection needs about 60 requests total, well over the daily cap. A single run of `collect_initial.py` will collect what the budget allows and stop; re-running on subsequent days resumes automatically and skips already-collected tickers.
 - **Point-in-time fundamentals**: each fundamentals pull is timestamped (`snapshot_date`) rather than overwriting old values, so that later feature engineering can look up "what was known as of date X" rather than leaking today's restated figures into historical training rows.
 - **Survivorship bias**: `STARTER_UNIVERSE` reflects currently-listed companies; delisted/failed companies are not represented in history. Worth flagging as a limitation in the proposal.
-- **Return prediction is genuinely hard**: regressor R² is near zero at short horizons (consistent with published short-horizon return literature), improving toward longer horizons. The classifier's directional accuracy (up to ~56% at 6 months vs. a 33% random baseline) is the stronger, more reliable signal — reported honestly in the model evaluation output rather than hidden.
+- **Return prediction is genuinely hard**: regressor R squared is near zero at short horizons (consistent with published short-horizon return literature), improving toward longer horizons. The classifier's directional accuracy (up to about 56% at 6 months vs. a 33% random baseline) is the stronger, more reliable signal, reported honestly in the model evaluation output rather than hidden.
 
 ## Next steps
 
